@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>IG Mockup Composer</title>
@@ -9,53 +9,53 @@
     <div class="app">
       <header>
         <h1>IG Mockup Composer</h1>
-        <p class="subtitle">Encaixa vídeos em massa dentro do retângulo do mockup</p>
+        <p class="subtitle">Batch-fit videos into the mockup's rectangle</p>
       </header>
 
       <div class="layout">
         <div class="canvas-col">
           <div id="canvasWrap" class="canvas-wrap">
             <canvas id="canvas" width="1080" height="1920"></canvas>
-            <div id="canvasEmpty" class="canvas-empty">Escolha uma imagem de fundo para começar</div>
+            <div id="canvasEmpty" class="canvas-empty">Choose a background image to start</div>
           </div>
           <div class="rect-controls">
             <label>X <input id="rx" type="number" value="180" /></label>
             <label>Y <input id="ry" type="number" value="430" /></label>
-            <label>Largura <input id="rw" type="number" value="720" /></label>
-            <label>Altura <input id="rh" type="number" value="1242" /></label>
+            <label>Width <input id="rw" type="number" value="720" /></label>
+            <label>Height <input id="rh" type="number" value="1242" /></label>
           </div>
           <div class="row">
-            <button id="previewBtn" class="secondary" disabled>Gerar prévia com 1º vídeo</button>
+            <button id="previewBtn" class="secondary" disabled>Preview with first video</button>
           </div>
         </div>
 
         <div class="panel-col">
           <section class="card">
-            <h2>1. Imagens de fundo (alternam a cada vídeo)</h2>
-            <button id="pickBackgroundBtn">Escolher imagem(ns)...</button>
-            <div id="backgroundPath" class="path-label">Nenhuma escolhida</div>
+            <h2>1. Background images (cycle per video)</h2>
+            <button id="pickBackgroundBtn">Choose image(s)...</button>
+            <div id="backgroundPath" class="path-label">None chosen</div>
             <div id="backgroundList" class="background-list"></div>
           </section>
 
           <section class="card">
-            <h2>2. Pasta de vídeos</h2>
-            <button id="pickInputBtn">Escolher pasta...</button>
-            <div id="inputPath" class="path-label">Nenhuma escolhida</div>
+            <h2>2. Video folder</h2>
+            <button id="pickInputBtn">Choose folder...</button>
+            <div id="inputPath" class="path-label">None chosen</div>
             <div id="videoCount" class="hint"></div>
           </section>
 
           <section class="card">
-            <h2>3. Pasta de saída</h2>
-            <button id="pickOutputBtn">Escolher pasta...</button>
-            <div id="outputPath" class="path-label">Nenhuma escolhida</div>
+            <h2>3. Output folder</h2>
+            <button id="pickOutputBtn">Choose folder...</button>
+            <div id="outputPath" class="path-label">None chosen</div>
           </section>
 
           <section class="card">
-            <h2>4. Processar</h2>
+            <h2>4. Process</h2>
             <div class="row">
-              <button id="processBtn" disabled>Iniciar processamento</button>
-              <button id="pauseBtn" class="secondary" disabled>Pausar</button>
-              <button id="stopBtn" class="secondary" disabled>Parar</button>
+              <button id="processBtn" disabled>Start processing</button>
+              <button id="pauseBtn" class="secondary" disabled>Pause</button>
+              <button id="stopBtn" class="secondary" disabled>Stop</button>
             </div>
             <div id="progressBar" class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
             <div id="progressLabel" class="hint"></div>

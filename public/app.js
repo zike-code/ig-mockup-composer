@@ -26,8 +26,8 @@ const videoListEl = document.getElementById("videoList");
 const VIDEO_EXT = new Set([".mp4", ".mov", ".m4v", ".avi", ".webm", ".mkv"]);
 
 const state = {
-  backgroundFiles: [], // ciclo de fundos: video[i] usa backgroundFiles[i % length]
-  activeBgPreview: 0, // qual fundo é mostrado no canvas de edição do retângulo
+  backgroundFiles: [], // background cycle: video[i] uses backgroundFiles[i % length]
+  activeBgPreview: 0, // which background is shown on the rectangle-editing canvas
   outputDirHandle: null,
   videoEntries: [], // [{ name, handle }]
   bgImage: null,
@@ -48,7 +48,7 @@ function waitIfPaused() {
 
 if (!window.showDirectoryPicker) {
   alert(
-    "Seu navegador não suporta a File System Access API (showDirectoryPicker). Use Chrome ou Edge recentes."
+    "Your browser does not support the File System Access API (showDirectoryPicker). Use a recent Chrome or Edge."
   );
 }
 
@@ -100,7 +100,7 @@ function updateProcessButton() {
   })
 );
 
-// --- Arrastar/redimensionar o retângulo no canvas ---
+// --- Drag / resize the rectangle on the canvas ---
 let dragMode = null;
 let dragStart = null;
 
@@ -166,7 +166,7 @@ window.addEventListener("mouseup", () => {
   dragMode = null;
 });
 
-// --- Escolher imagens de fundo (seletor nativo do navegador, várias de uma vez) ---
+// --- Choose background images (browser picker, several at once) ---
 function showBackgroundOnCanvas(index) {
   const file = state.backgroundFiles[index];
   if (!file) return;
@@ -199,7 +199,7 @@ function renderBackgroundList() {
     const item = document.createElement("div");
     item.className = "background-item" + (i === state.activeBgPreview ? " active" : "");
     item.draggable = true;
-    item.title = `${file.name} — arraste para reordenar`;
+    item.title = `${file.name} — drag to reorder`;
 
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
@@ -214,7 +214,7 @@ function renderBackgroundList() {
     removeBtn.type = "button";
     removeBtn.className = "bg-remove";
     removeBtn.textContent = "×";
-    removeBtn.title = "Remover este fundo";
+    removeBtn.title = "Remove this background";
     removeBtn.addEventListener("click", (evt) => {
       evt.stopPropagation();
       removeBackground(i);
@@ -250,8 +250,8 @@ function renderBackgroundList() {
   });
   backgroundPathEl.textContent =
     state.backgroundFiles.length > 0
-      ? `${state.backgroundFiles.length} imagem(ns) — alternando a cada vídeo`
-      : "Nenhuma escolhida";
+      ? `${state.backgroundFiles.length} image(s) — cycling per video`
+      : "None chosen";
 }
 
 async function uploadBackgrounds() {
@@ -288,7 +288,7 @@ pickBackgroundBtn.addEventListener("click", async () => {
     const handles = await window.showOpenFilePicker({
       types: [
         {
-          description: "Imagens",
+          description: "Images",
           accept: { "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] },
         },
       ],
@@ -299,7 +299,7 @@ pickBackgroundBtn.addEventListener("click", async () => {
     state.activeBgPreview = 0;
     showBackgroundOnCanvas(0);
 
-    // envia todos pro servidor (fica cacheado lá pra usar na prévia/processamento)
+    // upload them all to the server (cached there for previews and processing)
     await uploadBackgrounds();
     updateProcessButton();
   } catch (e) {
@@ -307,7 +307,7 @@ pickBackgroundBtn.addEventListener("click", async () => {
   }
 });
 
-// --- Escolher pasta de vídeos ---
+// --- Choose the video folder ---
 pickInputBtn.addEventListener("click", async () => {
   try {
     const dirHandle = await window.showDirectoryPicker({ mode: "read" });
@@ -320,7 +320,7 @@ pickInputBtn.addEventListener("click", async () => {
       if (VIDEO_EXT.has(ext)) entries.push({ name, handle });
     }
     state.videoEntries = entries;
-    videoCountEl.textContent = `${entries.length} vídeo(s) encontrado(s)`;
+    videoCountEl.textContent = `${entries.length} video(s) found`;
     renderVideoList();
     updateProcessButton();
   } catch (e) {
@@ -328,7 +328,7 @@ pickInputBtn.addEventListener("click", async () => {
   }
 });
 
-// --- Escolher pasta de saída (precisa de permissão de escrita) ---
+// --- Choose the output folder (needs write permission) ---
 pickOutputBtn.addEventListener("click", async () => {
   try {
     const dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
@@ -340,11 +340,11 @@ pickOutputBtn.addEventListener("click", async () => {
   }
 });
 
-// --- Prévia com o primeiro vídeo (usa o fundo selecionado no momento) ---
+// --- Preview with the first video (uses the currently selected background) ---
 previewBtn.addEventListener("click", async () => {
   if (state.backgroundFiles.length === 0 || state.videoEntries.length === 0) return;
   previewBtn.disabled = true;
-  previewBtn.textContent = "Gerando prévia...";
+  previewBtn.textContent = "Generating preview...";
   try {
     const file = await state.videoEntries[0].handle.getFile();
     const { x, y, w, h } = state.rect;
@@ -354,7 +354,7 @@ previewBtn.addEventListener("click", async () => {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "falha ao gerar prévia");
+      throw new Error(err.error || "preview failed");
     }
     const blob = await res.blob();
     const img = new Image();
@@ -367,7 +367,7 @@ previewBtn.addEventListener("click", async () => {
     alert(e.message || String(e));
   } finally {
     previewBtn.disabled = false;
-    previewBtn.textContent = "Gerar prévia com 1º vídeo";
+    previewBtn.textContent = "Preview with first video";
     updateProcessButton();
   }
 });
@@ -386,7 +386,7 @@ function renderVideoList() {
     label.textContent = name;
     const badge = document.createElement("span");
     badge.className = "status-badge";
-    badge.textContent = "pendente";
+    badge.textContent = "pending";
     div.appendChild(label);
     div.appendChild(badge);
     videoListEl.appendChild(div);
@@ -401,18 +401,19 @@ function setStatus(name, text, cls) {
   badge.className = "status-badge " + cls;
 }
 
-// --- Processar tudo: baixa bytes do video (handle), envia pro servidor
-//     compor, recebe o mp4 pronto e grava na pasta de saída escolhida. ---
+// --- Process everything: read the video bytes from its handle, send them
+//     to the server to compose, receive the finished mp4 and write it into
+//     the chosen output folder. ---
 processBtn.addEventListener("click", async () => {
   processBtn.disabled = true;
   pauseBtn.disabled = false;
   stopBtn.disabled = false;
-  pauseBtn.textContent = "Pausar";
+  pauseBtn.textContent = "Pause";
   state.paused = false;
   state.cancelRequested = false;
   renderVideoList();
   progressFill.style.width = "0%";
-  progressLabel.textContent = "Iniciando...";
+  progressLabel.textContent = "Starting...";
 
   const { x, y, w, h } = state.rect;
   const total = state.videoEntries.length;
@@ -422,20 +423,20 @@ processBtn.addEventListener("click", async () => {
 
   for (const [videoIndex, { name, handle }] of state.videoEntries.entries()) {
     if (state.cancelRequested) {
-      setStatus(name, "cancelado", "fail");
+      setStatus(name, "cancelled", "fail");
       continue;
     }
 
     await waitIfPaused();
 
     if (state.cancelRequested) {
-      setStatus(name, "cancelado", "fail");
+      setStatus(name, "cancelled", "fail");
       continue;
     }
 
     const bgIndex = videoIndex % state.backgroundFiles.length;
-    setStatus(name, "processando...", "processing");
-    progressLabel.textContent = `Processando: ${name} (fundo ${bgIndex + 1}/${state.backgroundFiles.length})`;
+    setStatus(name, "processing...", "processing");
+    progressLabel.textContent = `Processing: ${name} (background ${bgIndex + 1}/${state.backgroundFiles.length})`;
     currentAbortController = new AbortController();
     try {
       const file = await handle.getFile();
@@ -456,11 +457,11 @@ processBtn.addEventListener("click", async () => {
       setStatus(name, "OK", "ok");
     } catch (e) {
       if (e.name === "AbortError") {
-        setStatus(name, "cancelado", "fail");
+        setStatus(name, "cancelled", "fail");
       } else {
-        console.warn("Falha ao processar", name, e);
+        console.warn("Failed to process", name, e);
         fail++;
-        setStatus(name, "falhou", "fail");
+        setStatus(name, "failed", "fail");
       }
     }
     done++;
@@ -469,8 +470,8 @@ processBtn.addEventListener("click", async () => {
 
   const cancelled = state.cancelRequested;
   progressLabel.textContent = cancelled
-    ? `Cancelado: ${ok} OK, ${fail} falha(s) antes de parar.`
-    : `Concluído: ${ok} OK, ${fail} falha(s). Salvo na pasta escolhida.`;
+    ? `Cancelled: ${ok} OK, ${fail} failure(s) before stopping.`
+    : `Done: ${ok} OK, ${fail} failure(s). Saved to the chosen folder.`;
   processBtn.disabled = false;
   pauseBtn.disabled = true;
   stopBtn.disabled = true;
@@ -478,7 +479,7 @@ processBtn.addEventListener("click", async () => {
 
 pauseBtn.addEventListener("click", () => {
   state.paused = !state.paused;
-  pauseBtn.textContent = state.paused ? "Continuar" : "Pausar";
+  pauseBtn.textContent = state.paused ? "Resume" : "Pause";
   if (!state.paused && pauseResolve) {
     pauseResolve();
     pauseResolve = null;

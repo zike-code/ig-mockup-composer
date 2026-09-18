@@ -1,8 +1,8 @@
-// Servidor local (só localhost) para o IG Mockup Composer.
-// Os seletores de arquivo/pasta rodam 100% no navegador (File System
-// Access API) — o servidor só recebe os bytes de cada arquivo via upload
-// e roda o ffmpeg. Isso evita diálogos nativos do Windows via processo
-// externo, que às vezes abriam sem foco/escondidos atrás do navegador.
+// Local server (localhost only) for IG Mockup Composer.
+// File and folder pickers run entirely in the browser (File System Access
+// API) — the server only receives each file's bytes via upload and runs
+// ffmpeg. This avoids driving native Windows dialogs from an external
+// process, which sometimes opened unfocused or hidden behind the browser.
 
 const http = require("http");
 const fs = require("fs");
@@ -14,7 +14,7 @@ const { buffer: readBody } = require("node:stream/consumers");
 const PORT = 5177;
 const PUBLIC_DIR = path.join(__dirname, "public");
 
-let backgroundPaths = []; // ciclo de fundos: video[i] usa backgroundPaths[i % length]
+let backgroundPaths = []; // background cycle: video[i] uses backgroundPaths[i % length]
 
 function safeName(name) {
   return (name || "file").replace(/[^a-zA-Z0-9_.-]/g, "_");
@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === "/api/preview" && req.method === "POST") {
-    if (backgroundPaths.length === 0) return sendJson(res, 400, { error: "Nenhuma imagem de fundo definida" });
+    if (backgroundPaths.length === 0) return sendJson(res, 400, { error: "No background image set" });
     const { x, y, w, h } = rectFromQuery(parsed);
     const bgIndex = parseInt(parsed.searchParams.get("bgIndex"), 10) || 0;
     const backgroundPath = backgroundPaths[bgIndex % backgroundPaths.length];
@@ -119,7 +119,7 @@ const server = http.createServer(async (req, res) => {
     const { code } = await runFfmpeg(args);
     fs.unlink(tmpVideo, () => {});
     if (code !== 0 || !fs.existsSync(tmpOut)) {
-      return sendJson(res, 500, { error: "Falha ao gerar prévia" });
+      return sendJson(res, 500, { error: "Failed to render preview" });
     }
     const out = fs.readFileSync(tmpOut);
     fs.unlink(tmpOut, () => {});
@@ -128,7 +128,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === "/api/process-one" && req.method === "POST") {
-    if (backgroundPaths.length === 0) return sendJson(res, 400, { error: "Nenhuma imagem de fundo definida" });
+    if (backgroundPaths.length === 0) return sendJson(res, 400, { error: "No background image set" });
     const { x, y, w, h } = rectFromQuery(parsed);
     const bgIndex = parseInt(parsed.searchParams.get("bgIndex"), 10) || 0;
     const backgroundPath = backgroundPaths[bgIndex % backgroundPaths.length];
@@ -170,5 +170,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`IG Mockup Composer rodando em http://localhost:${PORT}`);
+  console.log(`IG Mockup Composer running at http://localhost:${PORT}`);
 });

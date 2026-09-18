@@ -1,58 +1,59 @@
 # IG Mockup Composer
 
-App local (servidor Node + página no navegador) que encaixa vídeos em massa
-dentro do retângulo reservado de um mockup (fundo com logo + legenda),
-gerando um `.mp4` final por vídeo de entrada.
+A local app (Node server + browser page) that batch-fits videos into the
+reserved rectangle of a mockup image (background with logo + caption),
+producing one final `.mp4` per input video.
 
-## Requisitos
+## Requirements
 
-- Node.js instalado (`node --version`).
-- `ffmpeg` instalado e disponível no PATH.
-- Windows (os seletores de arquivo/pasta usam diálogos nativos via
-  PowerShell + Windows Forms).
+- Node.js installed (`node --version`).
+- `ffmpeg` installed and available on your PATH.
+- A Chromium-based browser (Chrome or Edge) — the file and folder pickers use
+  the File System Access API.
 
-## Uso
+## Usage
 
-1. Dê duplo clique em `iniciar.bat` — abre o navegador em
-   `http://localhost:5177` e sobe o servidor local (a janela do terminal
-   que abrir precisa ficar aberta enquanto usa a ferramenta).
-2. **Imagem de fundo**: clique em "Escolher imagem..." e selecione o mockup.
-3. **Retângulo**: arraste o retângulo azul em cima da prévia do mockup (ou
-   edite os campos X/Y/Largura/Altura) até bater com o espaço reservado pro
-   vídeo. Clique em "Gerar prévia com 1º vídeo" pra ver como fica com um
-   vídeo de verdade encaixado (não só o retângulo).
-4. **Pasta de vídeos**: escolha a pasta com os vídeos de entrada.
-5. **Pasta de saída**: escolha onde salvar os vídeos finais.
-6. Clique em **"Iniciar processamento"** — acompanha o progresso de cada
-   vídeo em tempo real (pendente → processando → OK/falhou). Ao terminar,
-   "Abrir pasta de saída" abre o resultado no Explorer.
+1. Double-click `start.bat` — it opens the browser at `http://localhost:5177`
+   and starts the local server (keep the terminal window open while you use
+   the tool).
+2. **Background images**: click "Choose image(s)…" and select your mockups.
+   With more than one, they cycle: video *i* uses background *i % count*. Drag
+   the thumbnails to reorder them.
+3. **Rectangle**: drag the blue rectangle over the mockup preview (or edit the
+   X/Y/Width/Height fields) until it matches the space reserved for the video.
+   Click "Preview with first video" to see a real video fitted in, not just
+   the outline.
+4. **Video folder**: pick the folder holding the input videos.
+5. **Output folder**: pick where the finished videos should be saved.
+6. Click **"Start processing"** — each video's progress is shown live
+   (pending → processing → OK/failed), and you can pause or stop mid-run.
 
-## Como funciona
+## How it works
 
-- `server.js`: servidor HTTP local (só `127.0.0.1`, sem dependências
-  externas). Abre os diálogos nativos do Windows via um script PowerShell
-  descartável (`System.Windows.Forms.OpenFileDialog` /
-  `FolderBrowserDialog`), lista vídeos de uma pasta, serve a imagem de fundo
-  pro navegador, gera prévias e roda o processamento em lote via
-  `child_process.spawn("ffmpeg", ...)`, reportando progresso ao navegador
-  por Server-Sent Events.
-- `public/`: front-end (canvas com o retângulo arrastável/redimensionável
-  pelos cantos, painéis de escolha de arquivo/pasta, lista de progresso).
-- Para cada vídeo: `ffmpeg` redimensiona o vídeo pra caber inteiro dentro do
-  retângulo (preservando proporção — sobra uma barra branca fina se a
-  proporção não bater exatamente, sem cortar nada) e sobrepõe na posição
-  escolhida em cima da imagem de fundo, mantendo o áudio original.
+- `server.js`: local HTTP server (`127.0.0.1` only, no external dependencies).
+  It receives the uploaded bytes of each background and video, renders previews
+  and runs the batch through `child_process.spawn("ffmpeg", ...)`, returning the
+  finished MP4 to the browser.
+- `public/`: front end — a canvas with a rectangle you can drag and resize by
+  its corners, the file/folder pickers, and the progress list.
+- File and folder selection happens entirely in the browser through the File
+  System Access API, so the finished videos are written straight into the
+  folder you picked.
+- For each video, `ffmpeg` scales it to fit entirely inside the rectangle
+  (aspect ratio preserved — a thin white bar is padded in if the proportions do
+  not match exactly, nothing is cropped) and overlays it at the chosen position
+  on the background image, keeping the original audio.
 
-## Calibração padrão do retângulo
+## Default rectangle calibration
 
-Os valores iniciais (x=180, y=430, largura=720, altura=1242) foram
-calibrados comparando pixel a pixel um vídeo final já existente com o
-mockup em branco. Servem de ponto de partida — ajuste arrastando o
-retângulo na tela se usar um mockup diferente.
+The starting values (x=180, y=430, width=720, height=1242) were calibrated by
+comparing an existing finished video pixel by pixel against the blank mockup.
+Treat them as a starting point — drag the rectangle on screen if your mockup
+is different.
 
-## Limitações
+## Limitations
 
-- Não adiciona cantos arredondados nem sombra — o vídeo entra reto no
-  retângulo.
-- Não gera texto dinâmico (contagem de views, legenda variável).
-- Servidor local roda só em `127.0.0.1`; não é pra deixar exposto na rede.
+- No rounded corners or drop shadow — the video goes into the rectangle flat.
+- No dynamic text (view counts, variable captions).
+- The local server listens on `127.0.0.1` only; it is not meant to be exposed
+  on a network.
